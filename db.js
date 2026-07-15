@@ -21,6 +21,7 @@ module.exports = {
       cachedData[guildId] = {
         prefix: '&',
         whitelist: [],
+        owners: [],
         logsChannel: null,
         theme: '#5865F2'
       };

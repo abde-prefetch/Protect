@@ -14,19 +14,24 @@ module.exports = {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    const isOwner = message.author.id === message.guild.ownerId;
+    const isTrueOwner = message.author.id === message.guild.ownerId;
+    const isOwner = isTrueOwner || (config.owners && config.owners.includes(message.author.id));
 
     // &ghelp : Accessible à tous
     if (command === 'ghelp') {
       const embed = new EmbedBuilder()
         .setTitle('🛡️ S-V Guard — Aide')
-        .setDescription(`Préfixe actuel : \`${prefix}\`\n\n**Seul le propriétaire du serveur peut configurer le bot.**`)
+        .setDescription(`Préfixe actuel : \`${prefix}\`\n\n**Seul le propriétaire du serveur (ou les Bot Owners) peuvent configurer le bot.**`)
         .addFields(
           { name: '━━ Configuration ━━', value:
             `\`${prefix}gwhitelist @user\` — Ajouter à la whitelist\n` +
             `\`${prefix}gunwhitelist @user\` — Retirer de la whitelist\n` +
             `\`${prefix}glogs #salon\` — Configurer le salon de logs\n` +
             `\`${prefix}gstatus\` — Afficher le statut du bot`
+          },
+          { name: '━━ Couronne (Propriétaire du serveur uniquement) ━━', value:
+            `\`${prefix}gowner @user\` — Donner les permissions de Bot Owner\n` +
+            `\`${prefix}gunowner @user\` — Retirer les permissions de Bot Owner`
           }
         )
         .setColor(config.theme || '#5865F2')
@@ -36,10 +41,40 @@ module.exports = {
       return message.reply({ embeds: [embed] });
     }
 
-    // Commandes Owner uniquement
-    if (!isOwner) {
-      if (['gwhitelist', 'gunwhitelist', 'glogs', 'gstatus'].includes(command)) {
-        return message.reply("❌ Seul le propriétaire du serveur peut configurer S-V Guard.");
+    // Commandes Crown uniquement
+    if (['gowner', 'gunowner'].includes(command)) {
+      if (!isTrueOwner) {
+        return message.reply("❌ Seul le **propriétaire du serveur (Couronne)** peut donner ou retirer les permissions de Bot Owner.");
+      }
+
+      if (command === 'gowner') {
+        const target = message.mentions.users.first() || await client.users.fetch(args[0]).catch(() => null);
+        if (!target) return message.reply(`❌ Usage : \`${prefix}gowner @user\``);
+        
+        if (!config.owners) config.owners = [];
+        if (config.owners.includes(target.id)) return message.reply("❌ Cet utilisateur est déjà un Bot Owner.");
+
+        config.owners.push(target.id);
+        client.db.updateGuildConfig(guildId, { owners: config.owners });
+        return message.reply(`✅ **${target.username}** a été promu Bot Owner. Il peut maintenant configurer S-V Guard.`);
+      }
+
+      if (command === 'gunowner') {
+        const target = message.mentions.users.first() || await client.users.fetch(args[0]).catch(() => null);
+        if (!target) return message.reply(`❌ Usage : \`${prefix}gunowner @user\``);
+        
+        if (!config.owners || !config.owners.includes(target.id)) return message.reply("❌ Cet utilisateur n'est pas un Bot Owner.");
+
+        config.owners = config.owners.filter(id => id !== target.id);
+        client.db.updateGuildConfig(guildId, { owners: config.owners });
+        return message.reply(`✅ **${target.username}** a été retiré des Bot Owners.`);
+      }
+    }
+
+    // Commandes Bot Owner uniquement
+    if (['gwhitelist', 'gunwhitelist', 'glogs', 'gstatus'].includes(command)) {
+      if (!isOwner) {
+        return message.reply("❌ Seul un Bot Owner ou le propriétaire du serveur peut utiliser cette commande.");
       }
     }
 
@@ -73,10 +108,12 @@ module.exports = {
 
     if (command === 'gstatus') {
       const whitelistMembers = config.whitelist.map(id => `<@${id}>`).join(', ') || 'Aucun';
+      const botOwners = (config.owners || []).map(id => `<@${id}>`).join(', ') || 'Aucun';
       const embed = new EmbedBuilder()
         .setTitle('🛡️ S-V Guard — Statut')
         .addFields(
-          { name: '👑 Propriétaire', value: `<@${message.guild.ownerId}>`, inline: true },
+          { name: '👑 Propriétaire (Couronne)', value: `<@${message.guild.ownerId}>`, inline: true },
+          { name: '⭐ Bot Owners', value: botOwners, inline: true },
           { name: '📋 Whitelist', value: whitelistMembers, inline: false },
           { name: '📣 Salon de logs', value: config.logsChannel ? `<#${config.logsChannel}>` : 'Non configuré', inline: true },
           { name: '⚙️ Modules actifs', value:
