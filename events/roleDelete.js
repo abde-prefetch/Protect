@@ -12,6 +12,9 @@ module.exports = {
     const guild = role.guild;
     const config = client.db.getGuildConfig(guild.id);
 
+    // Sauvegarder la position AVANT la suppression
+    const savedPosition = role.position;
+
     try {
       await new Promise(r => setTimeout(r, 500));
 
@@ -41,12 +44,17 @@ module.exports = {
         reason: '[S-V Guard] Restauration automatique du rôle.'
       });
 
-      // 3. Log
+      // 3. Repositionner le rôle exactement où il était dans la hiérarchie
+      await guild.roles.setPositions([
+        { role: restored.id, position: savedPosition }
+      ]).catch(() => {});
+
+      // 4. Log
       const embed = new EmbedBuilder()
         .setTitle('🚨 Anti-Role Delete — Rôle restauré')
         .addFields(
           { name: 'Rôle supprimé', value: `${role.name} (${role.id})`, inline: true },
-          { name: 'Rôle restauré', value: `${restored}`, inline: true },
+          { name: 'Rôle restauré', value: `${restored} (position ${savedPosition})`, inline: true },
           { name: 'Responsable', value: `<@${executor.id}> (${executor.id})`, inline: false },
           { name: 'Sanction', value: '🔨 Banni définitivement', inline: true }
         )
