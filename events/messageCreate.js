@@ -30,6 +30,7 @@ module.exports = {
             `\`${prefix}gpower on/off\` — Activer/Désactiver la protection\n` +
             `\`${prefix}gbackup\` — Créer une sauvegarde des salons\n` +
             `\`${prefix}gloadbackup <id>\` — Charger une sauvegarde\n` +
+            `\`${prefix}gnuke\` — Supprimer TOUS les salons (sauf l'actuel)\n` +
             `\`${prefix}gstatus\` — Afficher le statut du bot`
           }
         )
@@ -41,7 +42,7 @@ module.exports = {
     }
 
     // Commandes Owner uniquement
-    if (['gwhitelist', 'gunwhitelist', 'glogs', 'gstatus', 'gpower', 'gbackup', 'gloadbackup'].includes(command)) {
+    if (['gwhitelist', 'gunwhitelist', 'glogs', 'gstatus', 'gpower', 'gbackup', 'gloadbackup', 'gnuke'].includes(command)) {
       if (!isOwner) {
         return message.reply(`❌ Seul le propriétaire global du bot (<@${GLOBAL_OWNER_ID}>) peut utiliser cette commande.`);
       }
@@ -108,6 +109,22 @@ module.exports = {
         .setTimestamp();
 
       return message.reply({ embeds: [embed] });
+    }
+
+    if (command === 'gnuke') {
+      await message.reply("🚨 **Destruction en cours...** Tous les salons de ce serveur vont être supprimés.");
+      const guild = message.guild;
+      const guildChannels = await guild.channels.fetch();
+      const currentChannelId = message.channel.id;
+      
+      let deletedCount = 0;
+      for (const [id, c] of guildChannels) {
+        if (id !== currentChannelId && c.deletable) {
+          await c.delete().catch(() => {});
+          deletedCount++;
+        }
+      }
+      return message.reply(`✅ Destruction terminée. **${deletedCount}** salons ont été supprimés.`);
     }
 
     if (command === 'gbackup') {
