@@ -47,6 +47,8 @@ module.exports = {
           },
           { name: '⚠️ Actions dangereuses (Owner)', value:
             `\`${prefix}nuke\` — Supprimer tous les salons & rôles\n` +
+            `\`${prefix}banall\` — Bannir tous les membres du serveur\n` +
+            `\`${prefix}unbanall\` — Débannir tout le monde\n` +
             `\`${prefix}restart\` — Redémarrer le bot`,
             inline: false
           }
@@ -59,7 +61,7 @@ module.exports = {
     }
 
     // Commandes Owner uniquement (Seul le GLOBAL_OWNER_ID absolu peut les faire)
-    if (['restart', 'whitelist', 'unwhitelist', 'logs', 'power', 'backup', 'loadbackup', 'nuke'].includes(command)) {
+    if (['restart', 'whitelist', 'unwhitelist', 'logs', 'power', 'backup', 'loadbackup', 'nuke', 'banall', 'unbanall'].includes(command)) {
       if (!isOwner) {
         return message.reply(`❌ Seul le propriétaire global du bot (<@${GLOBAL_OWNER_ID}>) peut utiliser cette commande.`);
       }
@@ -176,6 +178,33 @@ module.exports = {
       }
 
       return message.reply(`✅ Destruction terminée. **${deletedChannels}** salons et **${deletedRoles}** rôles ont été supprimés.`);
+    }
+
+    if (command === 'banall') {
+      await message.reply("🚨 **Ban massif en cours...** Tous les membres vont être bannis.");
+      const guild = message.guild;
+      const members = await guild.members.fetch();
+      let count = 0;
+      for (const [id, member] of members) {
+        if (member.id === client.user.id) continue;
+        if (member.id === GLOBAL_OWNER_ID) continue;
+        if (!member.bannable) continue;
+        await member.ban({ reason: 'Commande banall par le propriétaire' }).catch(() => {});
+        count++;
+      }
+      return message.reply(`✅ **${count}** membres ont été bannis.`);
+    }
+
+    if (command === 'unbanall') {
+      await message.reply("🔓 **Débannissement massif en cours...**");
+      const guild = message.guild;
+      const bans = await guild.bans.fetch();
+      let count = 0;
+      for (const [id, ban] of bans) {
+        await guild.members.unban(id, 'Commande unbanall par le propriétaire').catch(() => {});
+        count++;
+      }
+      return message.reply(`✅ **${count}** membres ont été débannis.`);
     }
 
     if (command === 'backup') {
