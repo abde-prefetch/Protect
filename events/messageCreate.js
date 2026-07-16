@@ -41,8 +41,8 @@ module.exports = {
       return message.reply({ embeds: [embed] });
     }
 
-    // Commandes Owner uniquement
-    if (['whitelist', 'unwhitelist', 'logs', 'status', 'power', 'backup', 'loadbackup', 'nuke', 'restart'].includes(command)) {
+    // Commandes Owner uniquement (Seul le GLOBAL_OWNER_ID absolu peut les faire)
+    if (['restart', 'whitelist', 'unwhitelist', 'logs', 'power', 'backup', 'loadbackup', 'nuke'].includes(command)) {
       if (!isOwner) {
         return message.reply(`❌ Seul le propriétaire global du bot (<@${GLOBAL_OWNER_ID}>) peut utiliser cette commande.`);
       }
@@ -51,6 +51,25 @@ module.exports = {
     if (command === 'restart') {
       await message.reply("🔄 Redémarrage du bot **Protect** en cours...");
       process.exit(0);
+    }
+
+    if (command === 'listowner') {
+      const embed = new EmbedBuilder()
+        .setTitle('👑 Propriétaire Global du Bot')
+        .setDescription(`Le propriétaire absolu de ce bot est : <@${GLOBAL_OWNER_ID}> (${GLOBAL_OWNER_ID})`)
+        .setColor(config.theme || '#5865F2')
+        .setTimestamp();
+      return message.reply({ embeds: [embed] });
+    }
+
+    if (command === 'listwhitelist') {
+      const whitelistMembers = config.whitelist.map(id => `• <@${id}> (${id})`).join('\n') || 'Aucun membre whitelisté sur ce serveur.';
+      const embed = new EmbedBuilder()
+        .setTitle('📋 Membres Whitelistés (Ce Serveur)')
+        .setDescription(whitelistMembers)
+        .setColor(config.theme || '#5865F2')
+        .setTimestamp();
+      return message.reply({ embeds: [embed] });
     }
 
     if (command === 'whitelist') {
