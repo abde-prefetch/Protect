@@ -14,14 +14,15 @@ module.exports = {
     if (config.antiRaid === false) return;
 
     try {
-      await new Promise(r => setTimeout(r, 500));
+      let entry = null;
+      for (let i = 0; i < 4; i++) {
+        const logs = await guild.fetchAuditLogs({ limit: 5, type: AuditLogEvent.WebhookCreate });
+        entry = logs.entries.find(e => e.target.channelId === channel.id || e.target.id === channel.id);
+        if (entry) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
 
-      const logs = await guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.WebhookCreate });
-      const entry = logs.entries.first();
       if (!entry) return;
-
-      // Si log trop vieux (>5s), ignorer
-      if (Date.now() - entry.createdTimestamp > 5000) return;
 
       const { executor } = entry;
       if (executor.id === client.user.id) return;

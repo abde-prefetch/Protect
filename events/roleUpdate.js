@@ -17,10 +17,14 @@ module.exports = {
     if (oldRole.permissions.bitfield === newRole.permissions.bitfield) return;
 
     try {
-      await new Promise(r => setTimeout(r, 500));
+      let entry = null;
+      for (let i = 0; i < 4; i++) {
+        const logs = await guild.fetchAuditLogs({ limit: 5, type: AuditLogEvent.RoleUpdate });
+        entry = logs.entries.find(e => e.target.id === newRole.id);
+        if (entry) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
 
-      const logs = await guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleUpdate });
-      const entry = logs.entries.first();
       if (!entry) return;
 
       const { executor } = entry;

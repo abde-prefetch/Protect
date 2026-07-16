@@ -17,10 +17,14 @@ module.exports = {
     const savedPosition = role.position;
 
     try {
-      await new Promise(r => setTimeout(r, 500));
+      let entry = null;
+      for (let i = 0; i < 4; i++) {
+        const logs = await guild.fetchAuditLogs({ limit: 5, type: AuditLogEvent.RoleDelete });
+        entry = logs.entries.find(e => e.target.id === role.id);
+        if (entry) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
 
-      const logs = await guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleDelete });
-      const entry = logs.entries.first();
       if (!entry) return;
 
       const { executor } = entry;
