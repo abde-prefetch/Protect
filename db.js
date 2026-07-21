@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Le lien de connexion fourni par le propriétaire
-const MONGO_URI = "mongodb+srv://squash751_db_user:5ol0oxJHBP8P7doQ@cluster0.5a9ywhq.mongodb.net/discord_bots?retryWrites=true&w=majority";
+const MONGO_URI = "mongodb+srv://helixo131_db_user:EB4fZP8i01cA8L5v@cluster0.k2zsim5.mongodb.net/discord_bots?retryWrites=true&w=majority";
 
 const GuildConfigSchema = new mongoose.Schema({
   guildId: String,
