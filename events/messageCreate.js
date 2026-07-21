@@ -40,6 +40,7 @@ module.exports = {
           { name: '👑 Permissions (Owner)', value:
             `\`${prefix}whitelist @user\` — Ajouter à la whitelist locale\n` +
             `\`${prefix}unwhitelist @user\` — Retirer de la whitelist\n` +
+            `\`${prefix}prefix <nouveau>\` — Changer le préfixe du bot\n` +
             `\`${prefix}listowner\` — Voir le propriétaire absolu\n` +
             `\`${prefix}listwhitelist\` — Voir la whitelist du serveur`,
             inline: false
@@ -64,7 +65,7 @@ module.exports = {
     }
 
     // Commandes Owner uniquement (Seul le GLOBAL_OWNER_ID absolu peut les faire)
-    if (['restart', 'whitelist', 'unwhitelist', 'logs', 'power', 'backup', 'loadbackup', 'nuke', 'banall', 'unbanall'].includes(command)) {
+    if (['restart', 'whitelist', 'unwhitelist', 'logs', 'power', 'backup', 'loadbackup', 'nuke', 'banall', 'unbanall', 'prefix'].includes(command)) {
       if (!isOwner) {
         return message.reply(`❌ Seul le propriétaire global du bot (<@${GLOBAL_OWNER_ID}>) peut utiliser cette commande.`);
       }
@@ -129,6 +130,15 @@ module.exports = {
       const isActive = opt === 'on';
       client.db.updateGuildConfig(guildId, { antiRaid: isActive });
       return message.reply(`✅ S-V Guard est maintenant **${isActive ? 'ACTIVÉ 🟢' : 'DÉSACTIVÉ 🔴'}**.`);
+    }
+
+    if (command === 'prefix') {
+      const newPrefix = args[0];
+      if (!newPrefix) return message.reply(`❌ Usage : \`${prefix}prefix <nouveau_prefix>\``);
+      if (newPrefix.length > 5) return message.reply("❌ Le préfixe ne doit pas dépasser 5 caractères.");
+
+      client.db.updateGuildConfig(guildId, { prefix: newPrefix });
+      return message.reply(`✅ Le préfixe de **Protect** a été modifié. Nouveau préfixe : \`${newPrefix}\``);
     }
 
     if (command === 'status') {
