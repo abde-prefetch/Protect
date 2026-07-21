@@ -18,8 +18,7 @@ module.exports = {
     const prefix = config.prefix || '&';
 
     const isWhitelisted = checkOwner(message.author.id) || 
-                          (config.whitelist && config.whitelist.includes(message.author.id)) ||
-                          (message.member && message.member.permissions.has(PermissionFlagsBits.Administrator));
+                          (config.whitelist && config.whitelist.includes(message.author.id));
 
     // Si la protection globale est activée et que l'utilisateur n'est pas whitelisté
     if (config.antiRaid !== false && !isWhitelisted) {
