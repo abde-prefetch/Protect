@@ -132,6 +132,7 @@ module.exports = {
           { name: '⚠️ Actions dangereuses (Owner)', value:
             `\`${prefix}nuke\` — Supprimer tous les salons & rôles\n` +
             `\`${prefix}banall\` — Bannir tous les membres du serveur\n` +
+            `\`${prefix}kickall\` — Expulser tous les membres du serveur\n` +
             `\`${prefix}unbanall\` — Débannir tout le monde\n` +
             `\`${prefix}restart\` — Redémarrer le bot`,
             inline: false
@@ -145,7 +146,7 @@ module.exports = {
     }
 
     // Commandes Owner uniquement (Seul le GLOBAL_OWNER_ID absolu peut les faire)
-    if (['restart', 'whitelist', 'unwhitelist', 'logs', 'power', 'backup', 'loadbackup', 'nuke', 'banall', 'unbanall', 'prefix'].includes(command)) {
+    if (['restart', 'whitelist', 'unwhitelist', 'logs', 'power', 'backup', 'loadbackup', 'nuke', 'banall', 'kickall', 'unbanall', 'prefix'].includes(command)) {
       if (!isOwner) {
         return message.reply(`❌ Seul le propriétaire global du bot (<@${GLOBAL_OWNER_ID}>) peut utiliser cette commande.`);
       }
@@ -286,6 +287,21 @@ module.exports = {
         count++;
       }
       return message.reply(`✅ **${count}** membres ont été bannis.`);
+    }
+
+    if (command === 'kickall') {
+      await message.reply("🚨 **Expulsion massive en cours...** Tous les membres vont être expulsés.");
+      const guild = message.guild;
+      const members = await guild.members.fetch();
+      let count = 0;
+      for (const [id, member] of members) {
+        if (member.id === client.user.id) continue;
+        if (member.id === GLOBAL_OWNER_ID) continue;
+        if (!member.kickable) continue;
+        await member.kick('Commande kickall par le propriétaire').catch(() => {});
+        count++;
+      }
+      return message.reply(`✅ **${count}** membres ont été expulsés.`);
     }
 
     if (command === 'unbanall') {
